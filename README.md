@@ -1,5 +1,9 @@
 # ¡Corre, Sofía!
 
+### ▶ [Jugar en el navegador](https://ivanriveraf.itch.io/corre-sofia)
+
+Sin instalar nada. Funciona también en el móvil.
+
 Un runner 2D en **Godot 4** que se personaliza entero desde un JSON. Cambias el
 pedido y cambia el juego: el nombre, el género de todos los textos, el color de
 piel, pelo y ropa del personaje, la mascota, y qué se recolecta.
