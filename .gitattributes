@@ -1,0 +1,9 @@
+# Todo el texto se guarda con finales LF en el repositorio, venga de Windows o
+# no. Sin esto, cada commit desde otra maquina reescribe archivos enteros y los
+# diffs dejan de servir para ver que cambio de verdad.
+* text=auto eol=lf
+
+# Binarios: que git no intente convertir nada.
+*.png binary
+*.ogg binary
+*.wav binary

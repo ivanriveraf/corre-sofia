@@ -1,0 +1,28 @@
+# Cache de importacion de Godot: se regenera sola al abrir el proyecto.
+.godot/
+
+# Exportaciones
+/build/
+*.exe
+*.pck
+*.apk
+*.zip
+
+# ---------------------------------------------------------------------------
+# PACKS DE TERCEROS CON LICENCIA SIN CONFIRMAR — NO PUBLICAR
+#
+# arte/nino es de pzUH y arte/mascota de FlatBoy. El permiso todavia no llega
+# (ver mensaje-pzuh.md en el repo del motor). No los usa ninguna linea de
+# codigo y no estan en el catalogo, pero quedan en el disco para cuando se
+# resuelva, asi que se excluyen aqui para que no acaben en un repo publico.
+# ---------------------------------------------------------------------------
+arte/nino/
+arte/mascota/
+
+# Material de trabajo, no del juego: generaciones crudas del modelo, videos de
+# prueba e imagenes de revision de las herramientas.
+arte_alternativo/
+grabaciones_runner/
+herramientas/revision/
+*.avi
+*.raw

@@ -1,0 +1,61 @@
+{
+  "pedido": {
+    "id": "2026-0014",
+    "plan": "medio",
+    "fechaFiesta": "2026-09-20",
+    "contacto": "Carolina (mamá) +56 9 xxxx xxxx"
+  },
+
+  "nombre": "Sofía",
+  "apodo": "Sofi",
+  "genero": "f",
+  "edad": 6,
+
+  "ciudad": "Valparaíso",
+  "lugar": "la plaza de su casa",
+  "colegio": "el jardín Los Aromos",
+  "amigos": ["Martina", "Benja", "Emilia"],
+
+  "mascota": { "nombre": "Luna", "tipo": "perra", "genero": "f" },
+
+  "coleccionable": { "singular": "gatito", "plural": "gatitos", "sprite": "assets/coleccionables/gatito.png" },
+
+  "colores": { "primario": "#E85DA1", "secundario": "#FFD166", "fondo": "#FFF4F8" },
+
+  "personaje": {
+    "piel": "#F0C29B",
+    "pelo": "#2B2118",
+    "peinado": "suelto",
+    "ropa": "falda",
+    "ropaColor": "#E85DA1",
+    "pantalonColor": "#6B3550",
+    "accesorio": "pecas",
+    "accesorioColor": "#FFD166"
+  },
+
+  "juegos": ["runner", "trivia", "memorice"],
+
+  "trivia": {
+    "respuestas": [
+      { "correcta": "Rosado", "otras": ["Verde", "Azul"] },
+      { "correcta": "Tallarines", "otras": ["Ensalada", "Pescado"] },
+      { "correcta": "Luna", "otras": ["Rocky", "Pelusa"] },
+      { "correcta": "A las muñecas", "otras": ["A la pelota", "Al pillarse"] },
+      { "correcta": "Cuando el gato se cae", "otras": ["Los chistes del papá", "Las cosquillas"] },
+      { "correcta": "Volar", "otras": ["Ser invisible", "Ser super fuerte"] },
+      { "correcta": "Let it go", "otras": ["El baile del gorila", "Feliz cumpleaños"] },
+      { "correcta": "Martina", "otras": ["Benja", "La tía del jardín"] }
+    ]
+  },
+
+  "mensajeFinal": {
+    "texto": "Gracias por llenarnos la casa de risas.",
+    "firma": "Mamá, Papá y la Luna"
+  },
+
+  "entrega": {
+    "url": "https://juegos-cumple.cl/j/sofia-2026",
+    "qr": true,
+    "tarjetaImpresa": true
+  }
+}
