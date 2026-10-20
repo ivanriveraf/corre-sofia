@@ -78,6 +78,9 @@ var _demo := false
 ## Existe porque un jugador reporto perder sin tocar el obstaculo, y sobre el
 ## dibujo no se puede saber donde esta la caja. Con esto se ve, que es la unica
 ## forma de comprobar si la caja coincide con lo que se ve en pantalla.
+var _sonido: Sonido
+var _destello: ColorRect
+
 var _ver_cajas := false
 
 ## Piloto torpe: --torpe salta tarde y a destiempo, a proposito.
@@ -101,6 +104,8 @@ func _ready() -> void:
 	_construir_fondo()
 	_construir_personajes()
 	_construir_interfaz()
+	_sonido = Sonido.new()
+	add_child(_sonido)
 	if _ver_cajas:
 		_capa_cajas = CajasDebug.new()
 		_capa_cajas.juego = self
@@ -254,6 +259,15 @@ func _construir_interfaz() -> void:
 	# Los Control se comen los clics por defecto (MOUSE_FILTER_STOP), asi que el
 	# panel de titulo bloqueaba el toque y el juego no arrancaba nunca. En el
 	# telefono habria pasado igual con el tactil.
+	# Destello del choque. Va por ENCIMA del juego y por DEBAJO del panel final
+	# (z 15 contra 20): se ve el golpe y luego entra el panel, en ese orden.
+	_destello = ColorRect.new()
+	_destello.color = Color(1, 1, 1, 0)
+	_destello.size = Vector2(ANCHO, ALTO)
+	_destello.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_destello.z_index = 15
+	add_child(_destello)
+
 	_panel = Control.new()
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.z_index = 20
@@ -307,6 +321,7 @@ func _ir_a_titulo() -> void:
 
 
 func _empezar() -> void:
+	_sonido.tocar("empezar")
 	_estado = Estado.JUGANDO
 	_panel.visible = false
 	_hud.visible = true
@@ -326,9 +341,21 @@ func _empezar() -> void:
 
 
 func _terminar(gano: bool) -> void:
+	# El estado cambia PRIMERO: congela el mundo en el fotograma del golpe. Antes
+	# el panel entraba de golpe en el mismo instante del choque y no se llegaba a
+	# ver que habia pasado; con esta pausa el niño ve que choco, y luego lee.
 	_estado = Estado.GANO if gano else Estado.PERDIO
-	_panel.visible = true
 	_hud.visible = false
+
+	if gano:
+		_sonido.tocar("ganar")
+	else:
+		# El golpe primero y la melodia detras: el choque es la causa y conviene
+		# que se oiga pegado a la imagen.
+		_sonido.tocar("choque")
+		_sonido.tocar("perder", 1.0, -4.0)
+		_parpadeo(Color(1, 1, 1, 0.55), 0.28)
+
 
 	if gano:
 		_titulo.text = Pedido.texto(Textos.COMUN["ganaste"])
@@ -342,6 +369,9 @@ func _terminar(gano: bool) -> void:
 			Pedido.texto(Textos.RUNNER["animo"]),
 		]
 	_pie.text = Pedido.texto(Textos.COMUN["reintentar"])
+
+	await get_tree().create_timer(0.45 if not gano else 0.25).timeout
+	_panel.visible = true
 
 	if _demo:
 		print("[demo] %s con %d/%d en %.1f s" % ["GANO" if gano else "perdio", _puntos, META, _tiempo_partida])
@@ -359,7 +389,13 @@ func _process(delta: float) -> void:
 	#
 	# Va ANTES del corte por estado: en la portada no hay partida pero los dos
 	# siguen corriendo en el sitio, que es lo que invita a tocar la pantalla.
-	var vel_anim := _vel if _estado == Estado.JUGANDO else VEL_INICIAL
+	# En la portada corren en el sitio, que es lo que invita a tocar. Al terminar
+	# se quedan QUIETOS: seguir trotando despues de estrellarse se ve a broma.
+	var vel_anim := 0.0
+	if _estado == Estado.JUGANDO:
+		vel_anim = _vel
+	elif _estado == Estado.TITULO:
+		vel_anim = VEL_INICIAL
 	_jugador.avanzar(vel_anim * delta)
 	_mascota.avanzar(vel_anim * delta)
 
@@ -438,9 +474,13 @@ func _mover_cosas(delta: float) -> void:
 				_explicar_choque(c)
 			if c.get_meta("tipo", "") == "premio":
 				_puntos += 1
+				# El tono sube con el avance: a los 25 gatitos suena medio tono
+				# mas alto que al primero. Es la forma mas barata de que el niño
+				# OIGA que se esta acercando a la meta, sin mirar el marcador.
+				_sonido.tocar("recoger", 1.0 + 0.45 * float(_puntos) / float(META))
 				_actualizar_hud()
-				c.queue_free()
 				_cosas.remove_at(i)
+				_reventar(c)
 				if _puntos >= META:
 					_terminar(true)
 					return
@@ -499,6 +539,32 @@ func _explicar_choque(c: Node2D) -> void:
 	print("[choque] %s en x=%.0f  |  jugador %s  cosa %s  |  solape %.0fx%.0f  |  _y=%.0f en_suelo=%s"
 		% [c.get_meta("tipo", "?"), c.position.x, pj, pc, solape.size.x, solape.size.y,
 			_y, _en_suelo])
+
+
+## El coleccionable no desaparece de golpe: crece y se desvanece.
+##
+## Es medio segundo de nada, pero es el premio de la accion que el niño repite 25
+## veces por partida. Sin esto, juntar un gatito y que se esfume sin mas se siente
+## como si no hubiera pasado.
+func _reventar(c: Node2D) -> void:
+	var t := create_tween().set_parallel()
+	t.tween_property(c, "scale", Vector2.ONE * 1.7, 0.22) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(c, "modulate:a", 0.0, 0.22)
+	# Sigue viajando con el suelo mientras revienta. Sin esto se queda clavado en
+	# pantalla y se nota que ya no es parte del mundo.
+	t.tween_property(c, "position:x", c.position.x - _vel * 0.22, 0.22)
+	await t.finished
+	# El nodo ya no esta en _cosas, asi que un reinicio a mitad del reventon no
+	# lo libera: puede seguir vivo o no cuando el tween acaba.
+	if is_instance_valid(c):
+		c.queue_free()
+
+
+## Un golpe de color sobre todo el juego, que se apaga solo.
+func _parpadeo(color: Color, duracion: float) -> void:
+	_destello.color = color
+	var t := create_tween()
+	t.tween_property(_destello, "color:a", 0.0, duracion).set_trans(Tween.TRANS_QUAD)
 
 
 func _generar(delta: float) -> void:
@@ -649,6 +715,9 @@ func _jugar_solo() -> void:
 func _saltar() -> void:
 	_vy = IMPULSO
 	_en_suelo = false
+	# Un pelin de variacion de tono para que veinte saltos seguidos no suenen a
+	# la misma muestra repetida, que es lo que delata a un juego barato.
+	_sonido.tocar("salto", randf_range(0.94, 1.06))
 
 
 ## Dibuja las cajas de colision. Solo con --cajas.
