@@ -119,3 +119,43 @@ static func con_datos(texto: String, cfg: Dictionary, datos: Dictionary) -> Stri
 	for clave: String in datos:
 		r = r.replace("{%s}" % clave, _a_texto(datos[clave]))
 	return r
+
+
+## Revisa una plantilla y devuelve sus problemas. Vacio = esta bien.
+##
+## POR QUE EXISTE: test.gd ya comprueba que los textos resuelvan sin dejar
+## tokens sueltos, pero eso solo prueba el genero DEL PEDIDO QUE HAYA. Un texto
+## escrito con dos variantes — "[o|a]" — pasa esa prueba con Sofia y con Pedro,
+## y revienta el dia que entre un pedido neutro. Esto lo caza antes, mirando la
+## plantilla en vez del resultado.
+static func lint(plantilla: String) -> Array[String]:
+	_compilar()
+	var problemas: Array[String] = []
+
+	for m: RegExMatch in _re_mascota.search_all(plantilla):
+		var partes := m.get_string(1).split("|")
+		if partes.size() != 3:
+			problemas.append("[m:%s] tiene %d variantes, deben ser 3 (m|f|n)"
+				% [m.get_string(1), partes.size()])
+
+	# Los del niño se buscan sobre el texto SIN los de la mascota, porque el
+	# patron general tambien casa con "[m:...]" y los contaria dos veces.
+	var sin_mascota := _re_mascota.sub(plantilla, "", true)
+	for m: RegExMatch in _re_nino.search_all(sin_mascota):
+		var partes := m.get_string(1).split("|")
+		if partes.size() != 3:
+			problemas.append("[%s] tiene %d variantes, deben ser 3 (m|f|n)"
+				% [m.get_string(1), partes.size()])
+
+	# Las variables validas se preguntan a variables(), que es QUIEN LAS PRODUCE,
+	# en vez de mantener una lista aparte: una lista a mano se desincroniza en
+	# cuanto alguien agrega un campo, y entonces el linter da falsos positivos
+	# sobre variables que si existen. Con un config vacio basta: lo que se usa
+	# son las CLAVES.
+	var conocidas := variables({}).keys()
+	for m: RegExMatch in _re_var.search_all(plantilla):
+		var v := m.get_string(1)
+		if not RUNTIME.has(v) and not conocidas.has(v):
+			problemas.append("{%s} no es una variable conocida" % v)
+
+	return problemas

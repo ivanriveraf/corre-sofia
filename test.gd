@@ -227,6 +227,29 @@ func _initialize() -> void:
 		"saltando, la caja termina %.0f px sobre el suelo (piernas recogidas)" % -salto.end.y,
 		"la caja llega al suelo aunque las piernas van recogidas")
 
+	print()
+	print("[12] El linter de plantillas")
+	# La prueba [7] resuelve los textos y comprueba que no queden tokens sueltos,
+	# pero eso solo prueba el genero DEL PEDIDO QUE HAYA. Un texto escrito con dos
+	# variantes pasa [7] con Sofia y con Pedro, y revienta con un pedido neutro.
+	for clave: String in Textos.RUNNER:
+		var p1 := Genero.lint(Textos.RUNNER[clave])
+		_ok(p1.is_empty(), "runner.%s esta bien escrito" % clave, ", ".join(p1))
+	for clave: String in Textos.COMUN:
+		var p2 := Genero.lint(Textos.COMUN[clave])
+		_ok(p2.is_empty(), "comun.%s esta bien escrito" % clave, ", ".join(p2))
+
+	# Y que el linter CACE de verdad. Sin esto, uno que siempre devuelve vacio
+	# pasaria todas las comprobaciones de arriba sin hacer nada.
+	_ok(Genero.lint("Bienvenid[o|a] a {lugar}").size() == 1,
+		"caza un token con 2 variantes en vez de 3")
+	_ok(Genero.lint("{mascota} esta perdid[m:o|a]").size() == 1,
+		"caza tambien los de la mascota")
+	_ok(Genero.lint("Hola {nombree}").size() == 1,
+		"caza una variable mal escrita")
+	_ok(Genero.lint("¡Corre, {nombre}! Eres [rapido|rapida|rapide]").is_empty(),
+		"no se queja de un texto correcto")
+
 	print("\n" + "=".repeat(58))
 	if fallos == 0:
 		print("TODO OK — el motor GDScript coincide con el de JavaScript.")
