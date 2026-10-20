@@ -126,8 +126,22 @@ godot --path . -- --demo --cajas    # piloto automático, con cajas de colisión
 node herramientas/generar_sonidos.js   # regenerar los efectos
 ```
 
-Probado en escritorio, Android y iPhone (export HTML5, renderizador GL
-Compatibility).
+### Build para web
+
+```bash
+godot --headless --path . --export-release "Web" build/index.html
+```
+
+Renderizador GL Compatibility, hilo único — así corre sin cabeceras COOP/COEP y
+se puede servir desde cualquier sitio. Pesa **~11 MB comprimido**: 9 de runtime
+de Godot y 1.9 del juego.
+
+> Si el `.pck` te sale mucho más grande, revisa que no haya carpetas de trabajo
+> dentro del proyecto. Godot importa y empaqueta todo lo que encuentra: aquí,
+> una carpeta con las generaciones crudas del modelo engordaba el paquete de 1.9
+> a 10.2 MB. Se arregla con un `.gdignore` vacío dentro.
+
+Probado en escritorio, Android y iPhone.
 
 ## Tecnologías
 
